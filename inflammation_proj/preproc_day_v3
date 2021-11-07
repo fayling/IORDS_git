@@ -1,0 +1,37 @@
+#!/bin/bash
+#get_day is at:
+#/home/fayling/IORDS2021/linux3/root/home/brainhacker/bin/get_day
+IN_DIR="/home/fayling/IORDS2021/inflammation_proj/raw_data"
+OUT_DIR="/home/fayling/IORDS2021/inflammation_proj/preproc"
+DAY=27
+csv_files=("${IN_DIR}"/*/inflammation*.csv)
+
+echo "it's working"
+
+#create the OUT_DIR directory if it doesn't exist
+if [[ ! -d ${OUT_DIR} ]]; then
+    echo "${OUT_DIR} does not exist"
+    mkdir ${OUT_DIR}
+    echo "${OUT_DIR} was generated"
+fi
+
+for item in "${csv_files[@]}"; do
+    tempvar1="${item%/*}" #saves the full path until region
+    tempvar2="${item##/*region/}" #saves only the file name and .csv
+    tempvar3="${tempvar1##*/}" #saves the region code with _region
+    subj_num=$(cat "${item}" | wc -l) #saves line number
+    echo "${tempvar1##*/}" #outputs only the region
+    echo "${tempvar2}" #outputs the file name and .csv
+    echo "${subj_num}" #outputs the subject number
+    if [[ ${subj_num} -lt 30 ]]; then
+        echo "this file has less than 30 subjects"
+    else
+        echo "this file is being included for preprocessing"
+        echo "region code is ${tempvar3%_region}" #this outputs only the region code
+        echo "file name is ${tempvar2%.csv}" #this outputs only the file name
+        echo "extension is day${DAY}.csv" #this outputs "dayX.csv" X being the value of DAY
+        temp_out_dir="${OUT_DIR}/${tempvar3%_region}_${tempvar2%.csv}_day${DAY}.csv"
+        /home/fayling/IORDS2021/linux3/root/home/brainhacker/bin/get_day -f ${item} -o ${temp_out_dir} -d ${DAY}
+    fi
+    echo "__________________________________________________________"
+done

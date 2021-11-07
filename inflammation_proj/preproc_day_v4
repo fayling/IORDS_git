@@ -1,0 +1,91 @@
+#!/bin/bash
+#get_day is at:
+#/home/fayling/IORDS2021/linux3/root/home/brainhacker/bin/get_day
+
+SCRIPT=$(basename $0)
+OUT_DIR=
+DAY=20 #default day is 20
+
+while getopts ":o:d:" arg; do
+  case ${arg} in
+    # Indicate output file where to save the result
+    o )
+      OUT_DIR=${OPTARG}
+      ;;
+     # Indicate day to take data from
+    d )
+      DAY=${OPTARG}
+      ;;
+    # Option entered by user does not exist
+    \? )
+      echo "${SCRIPT}: Invalid option -$OPTARG ignored"
+      ;;
+    # Option entered by user is missing argument
+    : )
+      echo "${SCRIPT}: must supply an argument to -$OPTARG"
+      ;;
+  esac
+done
+
+# Function to print help (script usage)
+usage() {
+  echo "Usage: $1"
+  echo " -o out_file    path to the file where to save the output"
+  echo " -d day_integer  integer between 1 and 40 (default 20)"
+}
+
+# Print the script help (usage) if no arguments are provided
+if [[ $# -eq 0 ]]; then 
+  usage ${SCRIPT}
+  exit 1
+fi
+
+# Check required argument is present
+if [[ -z "${OUT_DIR}" ]]; then
+  echo "Required output file option missing."
+  echo "${OUT_DIR}"
+  usage ${SCRIPT}
+  exit 1
+fi
+
+#Check if day is between 1 and 40
+if [[ ${DAY} -lt 1 || ${DAY} -gt 40 ]]; then
+  echo "The day is not between 1 and 40."
+  echo "${DAY}"
+  usage ${SCRIPT}
+  exit 1
+fi
+
+#this is the actual thing
+
+#create the OUT_DIR directory if it doesn't exist
+if [[ ! -d ${OUT_DIR} ]]; then
+    echo "${OUT_DIR} does not exist"
+    mkdir ${OUT_DIR}
+    echo "${OUT_DIR} was generated"
+fi
+
+IN_DIR="/home/fayling/IORDS2021/inflammation_proj/raw_data"
+#OUT_DIR="/home/fayling/IORDS2021/inflammation_proj/preproc"
+csv_files=("${IN_DIR}"/*/inflammation*.csv)
+
+for item in "${csv_files[@]}"; do
+    tempvar1="${item%/*}" #saves the full path until region
+    tempvar2="${item##/*region/}" #saves only the file name and .csv
+    tempvar3="${tempvar1##*/}" #saves the region code with _region
+    subj_num=$(cat "${item}" | wc -l) #saves line number
+    echo "${tempvar1##*/}" #outputs only the region
+    echo "${tempvar2}" #outputs the file name and .csv
+    echo "${subj_num}" #outputs the subject number
+    if [[ ${subj_num} -lt 30 ]]; then
+        echo "this file has less than 30 subjects"
+    else
+        echo "this file is being included for preprocessing"
+        echo "region code is ${tempvar3%_region}" #this outputs only the region code
+        echo "file name is ${tempvar2%.csv}" #this outputs only the file name
+        echo "extension is day${DAY}.csv" #this outputs "dayX.csv" X being the value of DAY
+        temp_out_dir="${OUT_DIR}/${tempvar3%_region}_${tempvar2%.csv}_day${DAY}.csv"
+        /home/fayling/IORDS2021/linux3/root/home/brainhacker/bin/get_day -f ${item} -o ${temp_out_dir} -d ${DAY}
+    fi
+    echo "__________________________________________________________"
+done

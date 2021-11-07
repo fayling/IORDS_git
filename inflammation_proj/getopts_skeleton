@@ -1,0 +1,46 @@
+#!/bin/bash
+
+print_cow="no"
+out_file=
+SCRIPT=$(basename $0)
+
+while getopts ":co:" arg; do
+  case ${arg} in
+    # Use cowsay to format output
+    c )
+      print_cow=“yes”
+      ;;
+    # Indicate output file where to save the result
+    o )
+      out_file=${OPTARG}
+      ;;
+    # Option entered by user does not exist
+    \? )
+      echo "${SCRIPT}: Invalid option -$OPTARG ignored"
+      ;;
+    # Option entered by user is missing argument
+    : )
+      echo "${SCRIPT}: must supply an argument to -$OPTARG"
+      ;;
+  esac
+done
+
+# Function to print help (script usage)
+usage() {
+  echo "Usage: $1"
+  echo " -o out_file    path to the file where to save the output"
+  echo "[-c]            use cow formatting"
+}
+
+# Print the script help (usage) if no arguments are provided
+if [[ $# -eq 0 ]]; then 
+  usage ${SCRIPT}
+  exit 1
+fi
+
+# Check required argument is present
+if [[ -z "${out_file}" ]]; then
+  echo "Required output file option missing."
+  usage ${SCRIPT}
+  exit 1
+fi
